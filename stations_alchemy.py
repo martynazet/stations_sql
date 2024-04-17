@@ -59,12 +59,23 @@ with open('clean_measure.csv', 'r') as file:
         }
         data2.append(measure)
 
-conn = engine.connect()
-conn.execute(stations.insert(), data1)
-conn.execute(measures.insert(), data2)
 
-result_stations = conn.execute(stations.select().limit(5)).fetchall()
-result_measures = conn.execute(measures.select().limit(5)).fetchall()
+if __name__ == "__main__":
+    conn = engine.connect()
+    conn.execute(stations.insert(), data1)
+    conn.execute(measures.insert(), data2)
 
-print(f'Stacje: {result_stations}')
-print(f'Pomiary: {result_measures}')
+    result_stations = conn.execute(stations.select().limit(5)).fetchall()
+    result_measures = conn.execute(measures.select().limit(5)).fetchall()
+    station_update = conn.execute(stations.update().where(stations.c.station == "USC00519397").values(country="United States"))
+    result_stations_update = conn.execute(stations.select().where(stations.c.station == "USC00519397")).fetchall()
+    delete_measures = conn.execute(measures.delete().where(measures.c.station == "USC00513117"))
+    result_delete_measures = conn.execute(measures.select().where(measures.c.station == "USC00513117")).fetchall()
+    
+    print(f'Stacje: {result_stations}')
+    print(f'Pomiary: {result_measures}')
+    print(f'Stacja: {result_stations_update}')
+    print(f'Pomiar: {result_delete_measures}')
+
+    
+    
