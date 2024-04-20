@@ -29,41 +29,48 @@ measures = Table(
 
 metadata.create_all(engine)
 
-with open('clean_stations.csv', 'r') as file:
-    next(file)
-    data1 = []
-    for line in file:
-        values = line.strip().split(',')
-        station = {
-            'station': values[0],
-            'latitude': float(values[1]),
-            'longitude': float(values[2]),
-            'elevation': float(values[3]),
-            'name': values[4],
-            'country': values[5],
-            'state': values[6]
-        }
-        data1.append(station)
+
+def read_file(file_path):
+    with open(file_path, 'r') as f:
+        next(f)
+        data = []
+        for line in f:
+            values = line.strip().split(',')
+            if 'stations' in file_path:
+                record = {
+                    'station': values[0],
+                    'latitude': float(values[1]),
+                    'longitude': float(values[2]),
+                    'elevation': float(values[3]),
+                    'name': values[4],
+                    'country': values[5],
+                    'state': values[6]
+                    }
+            else:
+                record = {
+                    'station': values[0],
+                    'date': datetime.strptime(values[1], "%Y-%m-%d").date(),
+                    'precip': float(values[2]),
+                    'tobs': int(values[3])
+                }
+            data.append(record)
+    return data
 
 
-with open('clean_measure.csv', 'r') as file:
-    next(file)
-    data2 = []
-    for line in file:
-        values = line.strip().split(',')
-        measure = {
-            'station': values[0],
-            'date': datetime.strptime(values[1], "%Y-%m-%d").date(),
-            'precip': float(values[2]),
-            'tobs': int(values[3])
-        }
-        data2.append(measure)
+def read_stations():
+    data_stations = read_file('clean_stations.csv')
+    return data_stations
+
+
+def read_measures():
+    data_measures = read_file('clean_measure.csv')
+    return data_measures
 
 
 if __name__ == "__main__":
-    conn = engine.connect()
-    conn.execute(stations.insert(), data1)
-    conn.execute(measures.insert(), data2)
+    conn = engine.connect()    
+    conn.execute(stations.insert(), read_stations())
+    conn.execute(measures.insert(), read_measures())
 
     result_stations = conn.execute(stations.select().limit(5)).fetchall()
     result_measures = conn.execute(measures.select().limit(5)).fetchall()
@@ -76,6 +83,3 @@ if __name__ == "__main__":
     print(f'Pomiary: {result_measures}')
     print(f'Stacja: {result_stations_update}')
     print(f'Pomiar: {result_delete_measures}')
-
-    
-    
